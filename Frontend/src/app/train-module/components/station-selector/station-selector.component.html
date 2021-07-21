@@ -1,0 +1,20 @@
+<main>
+    <header>
+    </header>
+    <section>
+        <mat-form-field>
+           <mat-label>Select Station</mat-label>
+            <input type="text" 
+            placeholder="Enter station"
+            aria-label="Number"
+            matInput [formControl]="myControl"
+            [matAutocomplete]="auto">
+
+            <mat-autocomplete #auto (optionSelected)='onStationSelect($event.option.value)'>
+            <mat-option class="option" *ngFor="let option of filteredOptions | async"  [value]="option.code">
+                   {{option.name}}
+            </mat-option>
+            </mat-autocomplete>
+         </mat-form-field>
+    </section>
+</main>

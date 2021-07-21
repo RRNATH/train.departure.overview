@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Trains departure overview
+
+Parameters:
+  Version:
+    Description: The version of the API
+    Type: String
+    Default : v1
+  Stage:
+    Description: Environment of this stack of resources
+    Type: String
+    Default : dev
+    AllowedValues:
+      - dev
+      - test
+      - uat
+      - prod
+  AllowOrigin: 
+    Type: String
+    Default : "'http://localhost:4200'"
+  ApiKey:
+    Type: String
+  ApiSecret:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  TrainsOverviewApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${Stage}-${Version}-train_overview_ApiGateway"
+      StageName: !Ref Stage
+      Cors:
+        AllowMethods: "'POST, GET'"
+        AllowHeaders: "'X-Forwarded-For'"
+        AllowOrigin: !Ref AllowOrigin
+        MaxAge: "'600'"
+        AllowCredentials: true
+
+  GetStationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Stage}-${Version}-get_stations_Lambda"
+      CodeUri: get_stations/
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          ApiKey_NSNL : !Ref ApiKey
+          ApiSecret_NSNL : !Ref ApiSecret
+      Events:
+        Station:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TrainsOverviewApiGateway
+            Path: /stations
+            Method: get
+
+  GetDepartureFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: get_departures/
+      FunctionName: !Sub "${Stage}-${Version}-get_departure_Lambda"
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          ApiKey_NSNL : !Ref ApiKey
+          ApiSecret_NSNL : !Ref ApiSecret
+      Events:
+        Departure:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TrainsOverviewApiGateway
+            Path: /departures/{code}
+            Method: get
+
+Outputs:
+  GetStationsFunction:
+    Description: "Get Station lambda function ARN"
+    Value: !GetAtt GetStationsFunction.Arn
+  GetStationsFunctionIamRole:
+    Description: "Implicit IAM Role created for Get Station function"
+    Value: !GetAtt GetStationsFunction.Arn
+  GetDepartureFunction:
+    Description: "Get Station lambda function ARN"
+    Value: !GetAtt GetDepartureFunction.Arn
+  GetDepartureFunctionIamRole:
+    Description: "Implicit IAM Role created for Get departures function"
+    Value: !GetAtt GetDepartureFunction.Arn
