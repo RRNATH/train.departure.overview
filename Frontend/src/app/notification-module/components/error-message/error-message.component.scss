@@ -1,0 +1,14 @@
+main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  main header {
+    z-index: 3;
+  }
+  
+  main section{
+    flex: 1;
+    z-index: 0;
+  }
